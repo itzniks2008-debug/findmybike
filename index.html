@@ -487,39 +487,59 @@
       });
     }
   </script>
-<script>
+
+  <script>
   let installPrompt = null;
 
   const installButton = document.getElementById("installButton");
 
+  function isAppInstalled() {
+    return window.matchMedia("(display-mode: standalone)").matches ||
+           window.navigator.standalone === true;
+  }
+
+  function updateInstallButton() {
+    if (isAppInstalled()) {
+      installButton.hidden = true;
+      return;
+    }
+
+    installButton.hidden = !installPrompt;
+  }
+
+  updateInstallButton();
+
   window.addEventListener("beforeinstallprompt", (event) => {
     event.preventDefault();
-
     installPrompt = event;
-    installButton.hidden = false;
+    updateInstallButton();
   });
 
   installButton.addEventListener("click", async () => {
-    if (installPrompt) {
-      installPrompt.prompt();
+    if (!installPrompt) {
+      alert("If FindMyBike is not installed, open Chrome's menu and select Install app.");
+      return;
+    }
 
-      const result = await installPrompt.userChoice;
+    installPrompt.prompt();
 
-      if (result.outcome === "accepted") {
-        installButton.textContent = "✅ App installation accepted!";
-      }
+    const result = await installPrompt.userChoice;
+    installPrompt = null;
 
-      installPrompt = null;
+    if (result.outcome === "accepted") {
       installButton.hidden = true;
     } else {
-      alert(
-        "To install FindMyBike, open Chrome's menu and select Install app or Add to Home screen."
-      );
+      updateInstallButton();
     }
   });
 
   window.addEventListener("appinstalled", () => {
+    installPrompt = null;
     installButton.hidden = true;
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) updateInstallButton();
   });
 </script>
 </body>
