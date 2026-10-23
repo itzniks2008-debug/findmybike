@@ -406,5 +406,16 @@
 
     render();
   </script>
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js")
+          .then(() => console.log("FindMyBike is ready!"))
+          .catch(error => console.error("Service worker error:", error));
+      });
+    }
+  </script>
+
 </body>
 </html>
