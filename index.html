@@ -360,14 +360,81 @@
       mapLink.scrollIntoView({ behavior: "smooth", block: "center" });
     });
 
-    photoInput.addEventListener("change", () => {
-      const file = photoInput.files && photoInput.files[0];
-      if (!file) return;
+    photoInput.addEventListener("change", async () => {
+  const file = photoInput.files && photoInput.files[0];
+  if (!file) return;
 
-      if (!file.type.startsWith("image/")) {
-        showStatus("Please select an image.");
-        return;
-      }
+  if (!file.type.startsWith("image/")) {
+    showStatus("Please select an image.");
+    return;
+  }
+
+  showStatus("📸 Optimizing your photo...");
+
+  try {
+    const imageURL = URL.createObjectURL(file);
+    const image = new Image();
+
+    image.src = imageURL;
+
+    await new Promise((resolve, reject) => {
+      image.onload = resolve;
+      image.onerror = reject;
+    });
+
+    // Resize large photos while preserving their proportions.
+    const maxDimension = 1280;
+    const scale = Math.min(
+      1,
+      maxDimension / Math.max(image.naturalWidth, image.naturalHeight)
+    );
+
+    const canvas = document.createElement("canvas");
+
+    canvas.width = Math.max(
+      1,
+      Math.round(image.naturalWidth * scale)
+    );
+
+    canvas.height = Math.max(
+      1,
+      Math.round(image.naturalHeight * scale)
+    );
+
+    const context = canvas.getContext("2d");
+
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    URL.revokeObjectURL(imageURL);
+
+    // Compress to JPEG and reduce quality if needed.
+    let quality = 0.8;
+    let compressedPhoto = canvas.toDataURL("image/jpeg", quality);
+
+    while (compressedPhoto.length > 900000 && quality > 0.35) {
+      quality -= 0.1;
+      compressedPhoto = canvas.toDataURL("image/jpeg", quality);
+    }
+
+    if (compressedPhoto.length > 900000) {
+      showStatus("This photo is still too large. Please try another photo.");
+      return;
+    }
+
+    currentPhoto = compressedPhoto;
+    saved.photo = compressedPhoto;
+
+    preview.src = compressedPhoto;
+    preview.style.display = "block";
+
+    showStatus(
+      "✅ Photo optimized! Tap Save Notes to save your photo."
+    );
+
+  } catch (error) {
+    showStatus("Unable to process this photo. Please try another one.");
+  }
+});
 
       if (file.size > 2 * 1024 * 1024) {
         showStatus("Please choose a photo smaller than 2 MB.");
