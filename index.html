@@ -439,25 +439,7 @@
     showStatus("Unable to process this photo. Please try another one.");
   }
 });
-
-      if (file.size > 2 * 1024 * 1024) {
-        showStatus("Please choose a photo smaller than 2 MB.");
-        photoInput.value = "";
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = () => {
-        currentPhoto = reader.result;
-        preview.src = currentPhoto;
-        preview.style.display = "block";
-        saved.photo = currentPhoto;
-        showStatus("Photo selected. Tap Save Notes to save it.");
-      };
-      reader.readAsDataURL(file);
-    });
-
-    document.getElementById("saveNotesButton").addEventListener("click", () => {
+      document.getElementById("saveNotesButton").addEventListener("click", () => {
       saved.notes = notesInput.value.trim();
 
       if (currentPhoto) saved.photo = currentPhoto;
